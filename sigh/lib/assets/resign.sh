@@ -599,16 +599,6 @@ function resign {
     done
 
     if [ "$ENTITLEMENTS" != "" ]; then
-        if [ -n "$APP_IDENTIFIER_PREFIX" ]; then
-            # sanity check the 'application-identifier' is present in the provided entitlements and matches the provisioning profile value
-            ENTITLEMENTS_APP_ID_PREFIX=$(PlistBuddy -c "Print :application-identifier" "$ENTITLEMENTS" | grep -E '^[A-Z0-9]*' -o | tr -d '\n')
-            if [ "$ENTITLEMENTS_APP_ID_PREFIX" == "" ]; then
-                error "Provided entitlements file is missing a value for the required 'application-identifier' key"
-            elif [ "$ENTITLEMENTS_APP_ID_PREFIX" != "$APP_IDENTIFIER_PREFIX" ]; then
-                error "Provided entitlements file's app identifier prefix value '$ENTITLEMENTS_APP_ID_PREFIX' does not match the provided provisioning profile's value '$APP_IDENTIFIER_PREFIX'"
-            fi
-        fi
-
         if [ -n "$TEAM_IDENTIFIER" ]; then
             # sanity check the 'com.apple.developer.team-identifier' is present in the provided entitlements and matches the provisioning profile value
             ENTITLEMENTS_TEAM_IDENTIFIER=$(PlistBuddy -c "Print :com.apple.developer.team-identifier" "$ENTITLEMENTS" | tr -d '\n')
