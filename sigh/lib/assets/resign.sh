@@ -613,8 +613,8 @@ function resign {
         # https://developer.apple.com/documentation/bundleresources/entitlements/diagnosing_issues_with_entitlements
         # However, validation of uploaded binaries says otherwise.
         # So this tries to fix it until Apple makes up it's mind about this.
-        PlistBuddy -c "Set application-identifier $BUNDLE_IDENTIFIER" "$ENTITLEMENTS"
-        log "Set application-identifier to entitlements: '$BUNDLE_IDENTIFIER' '$ENTITLEMENTS'"
+        PlistBuddy -c "Set application-identifier $ENTITLEMENTS_TEAM_IDENTIFIER.$BUNDLE_IDENTIFIER" "$ENTITLEMENTS"
+        log "Set application-identifier to entitlements: '$ENTITLEMENTS_TEAM_IDENTIFIER.$BUNDLE_IDENTIFIER' '$ENTITLEMENTS'"
 
         log "Resigning application using certificate: '$CERTIFICATE'"
         log "and entitlements: $ENTITLEMENTS"
