@@ -612,8 +612,10 @@ function resign {
         # Apple seems to suggest to remove the application-identifier from the entitlements: 
         # https://developer.apple.com/documentation/bundleresources/entitlements/diagnosing_issues_with_entitlements
         # However, validation of uploaded binaries says otherwise.
-        # So this tries to fix it until Apple makes up it's mind about this.
-        PlistBuddy -c "Set application-identifier $ENTITLEMENTS_TEAM_IDENTIFIER.$BUNDLE_IDENTIFIER" "$ENTITLEMENTS"
+        # So this tries to fix it until Apple makes up it's mind about this. 
+        # Removes it first, then add's it correctly
+        PlistBuddy -c "Delete application-identifier" "$ENTITLEMENTS"
+        PlistBuddy -c "Add :application-identifier string $ENTITLEMENTS_TEAM_IDENTIFIER.$BUNDLE_IDENTIFIER" "$ENTITLEMENTS"
         log "Set application-identifier to entitlements: '$ENTITLEMENTS_TEAM_IDENTIFIER.$BUNDLE_IDENTIFIER' '$ENTITLEMENTS'"
 
         log "Resigning application using certificate: '$CERTIFICATE'"
