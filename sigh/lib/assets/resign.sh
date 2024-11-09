@@ -618,12 +618,21 @@ function resign {
 
         log "Resigning application using certificate: '$CERTIFICATE'"
         log "and entitlements: $ENTITLEMENTS"
+        log "$(cat "$ENTITLEMENTS")"
         if [[ "${XCODE_VERSION/.*/}" -lt 10 ]]; then
             log "Creating an archived-expanded-entitlements.xcent file for Xcode 9 builds or earlier"
             cp -f "$ENTITLEMENTS" "$APP_PATH/archived-expanded-entitlements.xcent"
         fi
+        log "Using codesign line 626"
         /usr/bin/codesign ${VERBOSE} --generate-entitlement-der -f -s "$CERTIFICATE" --entitlements "$ENTITLEMENTS" "$APP_PATH"
         checkStatus
+        log "DEBUG: Extracting signed entitlements:"
+        DEBUG_ENTITLEMENTS="$TEMP_DIR/debugEntitlements"
+        /usr/bin/codesign -d --entitlements :"$DEBUG_ENTITLEMENTS" "$APP_PATH"
+        checkStatus
+        log "$(cat "$DEBUG_ENTITLEMENTS")"
+        # Remove debug
+        rm -f "$DEBUG_ENTITLEMENTS"
     elif  [[ -n "${USE_APP_ENTITLEMENTS}" ]]; then
         # Extract entitlements from provisioning profile and from the app binary
         # then combine them together
