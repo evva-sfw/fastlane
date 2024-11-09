@@ -609,23 +609,12 @@ function resign {
             fi
         fi
 
-        # Fix for Apple requesting removal of the application-identifier, 
+        # Apple seems to suggest to remove the application-identifier from the entitlements: 
         # https://developer.apple.com/documentation/bundleresources/entitlements/diagnosing_issues_with_entitlements
-        # Validation would not pass for the iOS Application any more, if the application-identifier is contained in the 
-        # enitlements.
-        # However, validition will not pass without the application-identifier in case of the embedded WatchKitApp 
-        # and the Widget.
+        # However, validation of uploaded binaries says otherwise.
         # So this tries to fix it until Apple makes up it's mind about this.
-        if [[ "$BUNDLE_IDENTIFIER" == *.watchkitapp ]]; then
-            PlistBuddy -c "Set application-identifier $BUNDLE_IDENTIFIER" "$ENTITLEMENTS"
-            log "Added application-identifier to entitlements for watchkitapp: '$BUNDLE_IDENTIFIER' '$ENTITLEMENTS'"
-        elif [[ "$BUNDLE_IDENTIFIER" == *.watchkitapp.widget ]]; then
-            PlistBuddy -c "Set application-identifier $BUNDLE_IDENTIFIER" "$ENTITLEMENTS"
-            log "Added application-identifier to entitlements for watchkitapp.widget: '$BUNDLE_IDENTIFIER' '$ENTITLEMENTS'"
-        else
-            PlistBuddy -c "Delete application-identifier" "$ENTITLEMENTS"
-            log "Removed application-identifier from entitlements for app: '$BUNDLE_IDENTIFIER' '$ENTITLEMENTS'"
-        fi
+        PlistBuddy -c "Set application-identifier $BUNDLE_IDENTIFIER" "$ENTITLEMENTS"
+        log "Set application-identifier to entitlements: '$BUNDLE_IDENTIFIER' '$ENTITLEMENTS'"
 
         log "Resigning application using certificate: '$CERTIFICATE'"
         log "and entitlements: $ENTITLEMENTS"
