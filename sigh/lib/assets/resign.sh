@@ -616,10 +616,10 @@ function resign {
         # However, validition will not pass without the application-identifier in case of the embedded WatchKitApp 
         # and the Widget.
         # So this tries to fix it until Apple makes up it's mind about this.
-        if [[ "$BUNDLE_IDENTIFIER" == *.watchkitapp ]] then
+        if [[ "$BUNDLE_IDENTIFIER" == *.watchkitapp ]]; then
             PlistBuddy -c "Set application-identifier $BUNDLE_IDENTIFIER" "$ENTITLEMENTS"
             log "Added application-identifier to entitlements for watchkitapp: '$BUNDLE_IDENTIFIER' '$ENTITLEMENTS'"
-        elif [[ "$BUNDLE_IDENTIFIER" == *.watchkitapp.widget ]] then
+        elif [[ "$BUNDLE_IDENTIFIER" == *.watchkitapp.widget ]]; then
             PlistBuddy -c "Set application-identifier $BUNDLE_IDENTIFIER" "$ENTITLEMENTS"
             log "Added application-identifier to entitlements for watchkitapp.widget: '$BUNDLE_IDENTIFIER' '$ENTITLEMENTS'"
         else
