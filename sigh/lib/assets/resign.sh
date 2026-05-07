@@ -609,19 +609,17 @@ function resign {
                 PlistBuddy -c "Set ${key} $NEW_REF_BUNDLE_ID" "$APP_PATH/Info.plist"
             fi
         fi
+        # Apple seems to suggest to remove the application-identifier from the entitlements:
+        # https://developer.apple.com/documentation/bundleresources/entitlements/diagnosing_issues_with_entitlements
+        # However, validation of uploaded binaries says otherwise.
+        # So this tries to fix it until Apple makes up it's mind about this.
+        # Removes it first, then add's it correctly
+        PlistBuddy -c "Delete application-identifier" "$ENTITLEMENTS"
+        PlistBuddy -c "Add :application-identifier string $ENTITLEMENTS_TEAM_IDENTIFIER.$BUNDLE_IDENTIFIER" "$ENTITLEMENTS"
+        log "Set application-identifier to entitlements: '$ENTITLEMENTS_TEAM_IDENTIFIER.$BUNDLE_IDENTIFIER' '$ENTITLEMENTS'"
     done
 
     if [ "$ENTITLEMENTS" != "" ]; then
-        if [ -n "$APP_IDENTIFIER_PREFIX" ]; then
-            # sanity check the 'application-identifier' is present in the provided entitlements and matches the provisioning profile value
-            ENTITLEMENTS_APP_ID_PREFIX=$(PlistBuddy -c "Print :application-identifier" "$ENTITLEMENTS" | grep -E '^[A-Z0-9]*' -o | tr -d '\n')
-            if [ "$ENTITLEMENTS_APP_ID_PREFIX" == "" ]; then
-                error "Provided entitlements file is missing a value for the required 'application-identifier' key"
-            elif [ "$ENTITLEMENTS_APP_ID_PREFIX" != "$APP_IDENTIFIER_PREFIX" ]; then
-                error "Provided entitlements file's app identifier prefix value '$ENTITLEMENTS_APP_ID_PREFIX' does not match the provided provisioning profile's value '$APP_IDENTIFIER_PREFIX'"
-            fi
-        fi
-
         if [ -n "$TEAM_IDENTIFIER" ]; then
             # sanity check the 'com.apple.developer.team-identifier' is present in the provided entitlements and matches the provisioning profile value
             ENTITLEMENTS_TEAM_IDENTIFIER=$(PlistBuddy -c "Print :com.apple.developer.team-identifier" "$ENTITLEMENTS" | tr -d '\n')
@@ -634,12 +632,21 @@ function resign {
 
         log "Resigning application using certificate: '$CERTIFICATE'"
         log "and entitlements: $ENTITLEMENTS"
+        log "$(cat "$ENTITLEMENTS")"
+
         if [[ "${XCODE_VERSION/.*/}" -lt 10 ]]; then
             log "Creating an archived-expanded-entitlements.xcent file for Xcode 9 builds or earlier"
             cp -f "$ENTITLEMENTS" "$APP_PATH/archived-expanded-entitlements.xcent"
         fi
+        log "Using codesign line 587"
         /usr/bin/codesign ${VERBOSE} "${PAGESIZE_ARGS[@]}" --generate-entitlement-der -f -s "$CERTIFICATE" --entitlements "$ENTITLEMENTS" "$APP_PATH"
         checkStatus
+        log "DEBUG: Extracting signed entitlements:"
+        DEBUG_ENTITLEMENTS="$TEMP_DIR/debugEntitlements"
+        /usr/bin/codesign -d --entitlements :"$DEBUG_ENTITLEMENTS" "$APP_PATH"
+        checkStatus
+        log "$(cat "$DEBUG_ENTITLEMENTS")"
+        rm -f "$DEBUG_ENTITLEMENTS"
     elif  [[ -n "${USE_APP_ENTITLEMENTS}" ]]; then
         # Extract entitlements from provisioning profile and from the app binary
         # then combine them together
